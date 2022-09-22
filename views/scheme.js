@@ -67,6 +67,35 @@ class Scheme{
         }
         return [currentPage,this.plans.length]
     }
+
+    async updatePlan(propertTobeUpdated,value){
+
+        switch (propertTobeUpdated) {
+            case ("agentCommission"): {
+                this.agentCommission=value
+                const [isDone,msg] =await Plan.db.replacePlan(this)
+                if(!isDone){
+                    return [null,"agentCommission could not be updated"]
+                }
+                return [this,`agentCommission updated successfully`]
+            }
+
+            case ("notes"): {
+                this.notes=value
+                const [isDone,msg] =await Plan.db.replacePlan(this)
+                if(!isDone){
+                    return [null,"notes could not be updated"]
+                }
+                return [this,`notes updated successfully`]
+
+            }
+        
+            default:{
+                return [null,"field can not be updated"]
+            }
+           
+        }
+    }
   
 }
 

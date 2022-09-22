@@ -23,7 +23,8 @@ const UserSchema = mongoose.Schema({
     referenceID:{type:String},
     referedBy:{ type: mongoose.SchemaTypes.ObjectId,ref:"user"},
     customers:{ type: [mongoose.SchemaTypes.ObjectId],ref:"user" },
-    qualification:{type:String}
+    qualification:{type:String},
+    commission:{type:Number}
 }, {
     timestamps: true
 })

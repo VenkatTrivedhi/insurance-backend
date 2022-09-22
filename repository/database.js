@@ -35,7 +35,7 @@ class DatabaseMongoose {
 
         if (err.code && err.code == 11000) {
             let field = Object.keys(err.keyValue)
-            console.log( `${field} already exist,try new one`)
+            console.log(`${field} already exist,try new one`)
             return [null, `${field} already exist,try new one`]
         }
 
@@ -48,7 +48,7 @@ class DatabaseMongoose {
     async insertCredential(credential) {
         try {
             let newRecord = await CredentialModel.create(credential)
-            return [newRecord,"credential created successfully"]
+            return [newRecord, "credential created successfully"]
         }
 
         catch (err) {
@@ -60,7 +60,7 @@ class DatabaseMongoose {
     async fetchCredential(username) {
         try {
             let record = await CredentialModel.findOne({ username: username })
-            return [record,"credentils fetched"] 
+            return [record, "credentils fetched"]
         }
 
         catch (err) {
@@ -71,7 +71,7 @@ class DatabaseMongoose {
     async fetchAllCredential() {
         try {
             let record = await CredentialModel.find()
-            return [record,"credentils fetched"]
+            return [record, "credentils fetched"]
         }
 
         catch (err) {
@@ -82,14 +82,14 @@ class DatabaseMongoose {
     async fetchUsernames(username) {
         try {
             console.log(username)
-            let record = await CredentialModel.find({},{username:1,_id:0})
-            return [record,"user fetched"]
+            let record = await CredentialModel.find({}, { username: 1, _id: 0 })
+            return [record, "user fetched"]
         }
 
         catch (err) {
             return DatabaseMongoose.hadleError(err)
         }
-    
+
     }
 
     async replaceCredential(credential) {
@@ -110,14 +110,14 @@ class DatabaseMongoose {
         }
         catch (err) {
             return DatabaseMongoose.hadleError(err)
-        } 
+        }
     }
 
     //user
     async insertUser(user) {
         try {
             let newRecord = await UserModel.create(user)
-            return [newRecord,"user created successfully"]
+            return [newRecord, "user created successfully"]
         }
 
         catch (err) {
@@ -128,19 +128,19 @@ class DatabaseMongoose {
     async fetchUser(credential) {
         try {
             let record = await UserModel.findOne({ credential: credential }).populate("credential role")
-            return [record,"user fetched"]
+            return [record, "user fetched"]
         }
 
         catch (err) {
             return DatabaseMongoose.hadleError(err)
         }
-    
+
     }
 
     async fetchAllUsers() {
         try {
             let record = await UserModel.find()
-            return [record,"user fetched"]
+            return [record, "user fetched"]
         }
 
         catch (err) {
@@ -152,13 +152,13 @@ class DatabaseMongoose {
 
         try {
             let record = await UserModel.find({ role: role })
-            return [record,`user with ${role} role fetched`]
+            return [record, `user with ${role} role fetched`]
         }
 
         catch (err) {
             return DatabaseMongoose.hadleError(err)
         }
-    
+
     }
 
     async replaceUser(userObject) {
@@ -180,19 +180,19 @@ class DatabaseMongoose {
         }
         catch (err) {
             return DatabaseMongoose.hadleError(err)
-        } 
+        }
     }
 
     async fetchAgent(referenceID) {
         try {
             let record = await UserModel.findOne({ referenceID: referenceID })
-            return [record,"user fetched"]
+            return [record, "user fetched"]
         }
 
         catch (err) {
             return DatabaseMongoose.hadleError(err)
         }
-    
+
     }
 
     //plantype
@@ -206,7 +206,7 @@ class DatabaseMongoose {
         }
     }
 
-    async fetchAllPlaneTypes(){
+    async fetchAllPlaneTypes() {
         try {
             let newRecord = await PlanTypeModel.find()
             return [newRecord, "plan types fetched successfully"]
@@ -217,11 +217,11 @@ class DatabaseMongoose {
 
     }
 
-    async fetchPlanTypeById(id){
+    async fetchPlanTypeById(id) {
         console.log(id)
 
         try {
-            let newRecord = await PlanTypeModel.findOne({id:id})
+            let newRecord = await PlanTypeModel.findOne({ id: id })
             return [newRecord, "plan type fetched successfully"]
         }
         catch (err) {
@@ -230,10 +230,32 @@ class DatabaseMongoose {
 
     }
 
+    async replacePlanType(id,type){
+        
+        try {
+            let record = await PlanTypeModel.updateOne({ id:id}, type)
+            if (record.modifiedCount == 1) {
+                return [true, "replace updated successfully"]
+            }
+
+            if (record.modifiedCount == 0) {
+                return [false, "replace not updated"]
+            }
+
+            if (record.modifiedCount > 1) {
+                return [true, "replace updated successfully"]
+            }
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        } 
+    
+    }
+
     //scheme
     async insertScheme(scheme) {
         try {
-            let newRecord = await  SchemeModel.create(scheme)
+            let newRecord = await SchemeModel.create(scheme)
             return [newRecord, "scheme created successfully"]
         }
         catch (err) {
@@ -241,7 +263,7 @@ class DatabaseMongoose {
         }
     }
 
-    async fetchAllSchemes(){
+    async fetchAllSchemes() {
         try {
             let newRecord = await SchemeModel.find()
             return [newRecord, "shemes fetched successfully"]
@@ -251,9 +273,9 @@ class DatabaseMongoose {
         }
     }
 
-    async fetchSchemeById(id){
+    async fetchSchemeById(id) {
         try {
-            let newRecord = await SchemeModel.findOne({id:id})
+            let newRecord = await SchemeModel.findOne({ id: id })
             return [newRecord, "schemes fetched successfully"]
         }
         catch (err) {
@@ -262,44 +284,85 @@ class DatabaseMongoose {
 
     }
 
-//plans
-async insertPlan(plan) {
-    try {
-        let newRecord = await PlanModel.create(plane)
-        return [newRecord, "Plan created successfully"]
-    }
-    catch (err) {
-        return DatabaseMongoose.hadleError(err)
-    }
-}
+    async replaceScheme(scheme) {
 
-async fetchAllPlaneTypes(){
-    try {
-        let newRecord = await PlanModel.find()
-        return [newRecord, "plan types fetched successfully"]
-    }
-    catch (err) {
-        return DatabaseMongoose.hadleError(err)
-    }
+        try {
+            let record = await SchemeModel.updateOne({ id:scheme.id}, scheme)
+            if (record.modifiedCount == 1) {
+                return [true, "scheme updated successfully"]
+            }
 
-}
+            if (record.modifiedCount == 0) {
+                return [false, "scheme not updated"]
+            }
 
-async fetchPlanById(id){
-
-    try {
-        let newRecord = await PlanModel.findOne({id:id})
-        return [newRecord, "plan type fetched successfully"]
-    }
-    catch (err) {
-        return DatabaseMongoose.hadleError(err)
+            if (record.modifiedCount > 1) {
+                return [true, "scheme updated successfully"]
+            }
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        } 
     }
 
-}
-    
+    //plans
+    async insertPlan(plan) {
+        try {
+            let newRecord = await PlanModel.create(plan)
+            return [newRecord, "Plan created successfully"]
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    async fetchAllPlans() {
+        try {
+            let newRecord = await PlanModel.find()
+            return [newRecord, "plan types fetched successfully"]
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+
+    }
+
+    async fetchPlanById(id) {
+
+        try {
+            let newRecord = await PlanModel.findOne({ id: id })
+            return [newRecord, "plan  fetched successfully"]
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+
+    }
+
+    async replacePlan(plan) {
+
+        try {
+            let record = await PlanModel.updateOne({ id:plan.id}, plan)
+            if (record.modifiedCount == 1) {
+                return [true, "plan updated successfully"]
+            }
+
+            if (record.modifiedCount == 0) {
+                return [false, "plan not updated"]
+            }
+
+            if (record.modifiedCount > 1) {
+                return [true, "plan users updated successfully"]
+            }
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        } 
+    }
 
     async fetchAccount(account_no) {
         try {
-            let newRecord = await AccountModel.findOne({account_no:account_no}).populate("transactions")
+            let newRecord = await AccountModel.findOne({ account_no: account_no }).populate("transactions")
             return [newRecord, "account fetched successfully"]
         }
         catch (err) {
@@ -317,9 +380,9 @@ async fetchPlanById(id){
         }
     }
 
-    async creditAccount(account,amount) {
+    async creditAccount(account, amount) {
         try {
-            let record = await AccountModel.updateOne({ account_no: account.account_no }, {$inc: {"balance": amount}})
+            let record = await AccountModel.updateOne({ account_no: account.account_no }, { $inc: { "balance": amount } })
             return [record, "account updated successfully"]
         }
         catch (err) {
@@ -327,9 +390,9 @@ async fetchPlanById(id){
         }
     }
 
-    async debitAccount(account,amount) {
+    async debitAccount(account, amount) {
         try {
-            let record = await AccountModel.updateOne({ account_no: account.account_no },  {$inc: {"balance": -amount}})
+            let record = await AccountModel.updateOne({ account_no: account.account_no }, { $inc: { "balance": -amount } })
             return [record, "account updated successfully"]
         }
         catch (err) {
@@ -337,9 +400,9 @@ async fetchPlanById(id){
         }
     }
 
-    async pushTransaction(account,id) {
+    async pushTransaction(account, id) {
         try {
-            let record = await AccountModel.updateOne({ account_no: account.account_no },  {$push: {"transactions": id}})
+            let record = await AccountModel.updateOne({ account_no: account.account_no }, { $push: { "transactions": id } })
             return [record, "account updated successfully"]
         }
         catch (err) {
@@ -350,7 +413,7 @@ async fetchPlanById(id){
 
     //Transaction
     async insertTransaction(transaction) {
-        
+
         try {
             let newRecord = await TransactionModel.create(transaction)
             return [newRecord, "transaction added successfully"]
@@ -361,7 +424,7 @@ async fetchPlanById(id){
         }
     }
     //roles
-    async insertRole(roleObject){
+    async insertRole(roleObject) {
         try {
             let newRecord = await RoleModel.create(roleObject)
             return [newRecord, "role added successfully"]
@@ -373,7 +436,7 @@ async fetchPlanById(id){
     async fetchAllRoles() {
         try {
             let record = await RoleModel.find()
-            return [record,"roles fetched"]
+            return [record, "roles fetched"]
         }
 
         catch (err) {
@@ -383,15 +446,15 @@ async fetchPlanById(id){
 
     async fetchRole(role) {
         try {
-            let record = await RoleModel.findOne({role:role})
-            return [record,"roles fetched"]
+            let record = await RoleModel.findOne({ role: role })
+            return [record, "roles fetched"]
         }
 
         catch (err) {
             return DatabaseMongoose.hadleError(err)
         }
     }
-    
+
     async replaceRole(role) {
         try {
             let record = await RoleModel.updateOne({ id: role.id }, role)

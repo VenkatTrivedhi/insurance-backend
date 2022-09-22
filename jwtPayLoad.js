@@ -20,7 +20,6 @@ class JwtPayload{
         return Payload
     }
 
-
     static async isValidAdmin(req,resp){
         const myToken = req.cookies["mytoken"]
         if(!myToken){
@@ -65,7 +64,16 @@ class JwtPayload{
         return [true,newPayload,user]
     }
 
-    static async isValidAdminOrSelf(req,resp){
+    static isUserRole(role,list){
+        for (let index = 0; index < list.length; index++) {
+            if(role==list[index]){
+                return true
+            };
+        }
+        return false
+    }
+
+    static async isValidRoleOrSelf(list,req,resp){
         const myToken = req.cookies["mytoken"]
         if(!myToken){
             resp.status(401).send({"message":"login required"})
@@ -74,8 +82,8 @@ class JwtPayload{
         const newPayload = JwtPayload.verifyCookies(myToken)
         const username = req.params.username
 
-        let isAdminOrSelf = newPayload.role=="Admin"|| newPayload.username==username
-        if(!isAdminOrSelf){
+        let isRoleOrSelf = JwtPayload.isUserRole(newPayload.role,list) || newPayload.username==username
+        if(!isRoleOrSelf){
             resp.status(403).send({"message":"User not permitted"})
             return [false,null,null]
         }

@@ -1,6 +1,7 @@
 const uuid  = require("uuid")
 const DatabaseMongoose = require("../repository/database")
 const Plan = require("./plan")
+const paginater = require("../paginater")
 
 class PlanType{
     constructor(id,title,isActive){
@@ -38,27 +39,35 @@ class PlanType{
         return [list,message]
     }
 
-    async getAllPlans(){
+    async getAllPlans(limit,page){
+        let list = paginater(this.plans,limit,page)
         const currentPage = [] 
-        for (let index = 0; index < this.plans.length; index++) {
-            if(this.plans[index].isActive){
-                let plan = Plan.reCreatePlan(this.plans[index])
+        for (let index = 0; index < list.length; index++) {
+            if(list[index].isActive){
+                let plan = Plan.reCreatePlan(list[index])
                 currentPage.push(plan)    
             }
         }
         return [currentPage,this.plans.length]
     }
     
-    async getAllPlans(age){
-        const currentPage = [] 
+    async getAllPlansWithAge(age,limit,page){
+        
+        const eligiblePlans = [] 
         for (let index = 0; index < this.plans.length; index++) {
             let plan = this.plans[index] 
             if(plan.isActive && plan.minimumAge>=age&&plan.maximumAge>=age){
-                let planObject = Plan.reCreatePlan(plan)
-                currentPage.push(planObject)    
+                eligiblePlans.push(plan)    
             }
         }
-        return [currentPage,this.plans.length]
+        let list = paginater(eligiblePlans,limit,page)
+        
+        currentPage = []
+        for (let index = 0; index < list.length; index++) {
+            let plan = Plan.reCreatePlan(list[index])
+            currentPage.push(plan)
+        }
+        return [currentPage,eligiblePlans.length]
     }
   
 }

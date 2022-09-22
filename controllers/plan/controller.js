@@ -8,8 +8,14 @@ const path =require("path")
 
 const createPlan = async (req, resp,img ) => {
 
-    const [isAdmin, AdminPayload, admin] = await JwtPayload.isValidAdmin(req, resp)
-    if(!isAdmin){
+    const [isLoggedIn, payload, user] = await JwtPayload.loggedInUser(req,resp)
+    if(!isLoggedIn){
+        return
+    }
+
+    const isPermited = user.isUserRole(["Admin","Employee"])
+    if(!isPermited){
+        resp.status(403).send({ "message": "user not permitted" })
         return
     }
     const missingInput = checkForRequiredInputs(req, [
@@ -31,12 +37,31 @@ const createPlan = async (req, resp,img ) => {
     resp.status(200).send({ "data": Plan, "message": message })
 }
 
+const getAllPlansByType= async (req, resp) => {
+    const missingInput = checkForRequiredInputs(req,[],["typeId"])
+    if (missingInput) {
+        resp.status(401).send({ "message": `${missingInput} is required`})
+        return `${missingInput} is required`
+    }
+    const [isLoggedIn, payload, user] = await JwtPayload.loggedInUser(req,resp)
+    if(!isLoggedIn){
+        return
+    }
+    const {limit,page} = req.query
+    const {typeId} = req.params
+    const [list,message] = await user.getPlansByType(typeId,limit,page)
+    if(!list){
+            resp.status(401).send({ "message": message })
+        }
+    resp.status(200).send({ "data": list, "message": message })
+}
 const getAllPlans = async (req, resp) => {
     const [isLoggedIn, payload, user] = await JwtPayload.loggedInUser(req,resp)
     if(!isLoggedIn){
         return
     }
-    const [list,message] = await user.getAllPlans()
+    const {limit,page} = req.query
+    const [list,message] = await user.getAllPlans(limit,page)
     if(!list){
             resp.status(401).send({ "message": message })
         }
@@ -44,18 +69,25 @@ const getAllPlans = async (req, resp) => {
 }
 
 const deletePlan = async (req, resp) => {
-    const [isAdmin, AdminPayload, admin] = await JwtPayload.isValidAdmin(req, resp)
-    if(!isAdmin){
+    
+    const [isLoggedIn, payload, user] = await JwtPayload.loggedInUser(req,resp)
+    if(!isLoggedIn){
         return
     }
 
+    const isPermited = user.isUserRole(["Admin","Employee"])
+    if(!isPermited){
+        resp.status(403).send({ "message": "user not permitted" })
+        return
+    }
+    
     const missingInput = checkForRequiredInputs(req, [],["id"])
     if (missingInput) {
         resp.status(401).send({ "message": `${missingInput} is required`})
         return `${missingInput} is required`
     }
     const {id} = req.params
-    const [isUpdated,message] = await admin.deletePlan(id)
+    const [isUpdated,message] = await user.deletePlan(id)
     if(!isUpdated){
             resp.status(401).send({ "message": message })
         }
@@ -63,8 +95,15 @@ const deletePlan = async (req, resp) => {
 }
 
 const updatePlan = async (req, resp) => {
-    const [isAdmin, AdminPayload, admin] = await JwtPayload.isValidAdmin(req, resp)
-    if(!isAdmin){
+    
+    const [isLoggedIn, payload, user] = await JwtPayload.loggedInUser(req,resp)
+    if(!isLoggedIn){
+        return
+    }
+
+    const isPermited = user.isUserRole(["Admin","Employee"])
+    if(!isPermited){
+        resp.status(403).send({ "message": "user not permitted" })
         return
     }
 
@@ -75,7 +114,7 @@ const updatePlan = async (req, resp) => {
     }
     const {propertyToBeUpdated,value} = req.body
     const {id} = req.params
-    const [isUpdated,message] = await admin.updatePlan(id,propertyToBeUpdated,value)
+    const [isUpdated,message] = await user.updatePlan(id,propertyToBeUpdated,value)
     if(!isUpdated){
             resp.status(401).send({ "message": message })
         }
@@ -83,9 +122,4 @@ const updatePlan = async (req, resp) => {
 }
 
 
-
-
-
-
-
-module.exports = {createPlan,getAllPlans,updatePlan,deletePlan} 
+module.exports = {createPlan,getAllPlans,getAllPlansByType,updatePlan,deletePlan} 

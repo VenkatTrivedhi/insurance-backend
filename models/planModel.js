@@ -12,7 +12,7 @@ const PlanSchema = mongoose.Schema({
     minimumInvestment:{type:Number},
     maximumInvestment:{type:Number},
     profitRatio:{type:Number}, 
-    isActive:{type:Boolean}    
+    isActive:{type:Boolean}   
 }, {
     timestamps: true
 })

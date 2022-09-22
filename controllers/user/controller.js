@@ -2,6 +2,7 @@ const User = require("../../Views/user")
 const JwtPayload = require("../../jwtPayLoad")
 const checkForRequiredInputs = require("../../checkForRequiredInputs")
 const Roles = require("../../role")
+
 const registerCustomer =  async (req,resp)=>{
     
     const missingInput = checkForRequiredInputs(req, [
@@ -9,15 +10,18 @@ const registerCustomer =  async (req,resp)=>{
         "address", "state", "city", "pincode", "mobileNumber",
         "documentType","documentFile","nominee", "nomineeRelation",
         "referedBy"])
+
     if (missingInput) {
         resp.status(401).send({ "message": `${missingInput} is required`})
         return `${missingInput} is required`
     }
+
     const [newUser, message] = await User.registerCustomer(
-        firstName, lastName,Dob,username, password, role ,email,
+        firstName, lastName,Dob,username, password ,email,
         address, state, city, pincode, mobileNumber,
         documentType,documentFile,nominee, nomineeRelation,reference,
         referedBy)
+    
     if (!newUser) {
         resp.status(500).send({ "message": message })
         return
@@ -37,6 +41,12 @@ const createUser = async (req, resp) => {
     if (!role) {
         resp.status(401).send({ "message": `role is required` })
         return `role is required`
+    }
+    const userRole = Roles.reCreateRole(user.role) 
+
+    if (!userRole.hasPermissionToCreate(role)) {
+        resp.status(403).send({ "message": "User not permitted" })
+        return
     }
 
     if (role == "Agent") {
@@ -63,12 +73,7 @@ const createUser = async (req, resp) => {
         firstName,lastName, userName, password,Dob,email,address,
         state,city,pincode,mobileNumber,documentType,documentFile,status,nominee,
         nomineeRelation,reference,referedBy,qualification} = req.body
-    const userRole = Roles.reCreateRole(user.role) 
-
-    if (!userRole.hasPermissionToCreateRole(role)) {
-        resp.status(403).send({ "message": "User not permitted" })
-        return
-    }
+    
     const [newUser, message] = await user.createUser(
         firstName, lastName,Dob,userName, password, role ,email,
         address, state, city, pincode, mobileNumber,
@@ -101,7 +106,7 @@ const getAllAgents = async (req, resp) => {
     console.log(user)
     const userRole = Roles.reCreateRole(user.role) 
 
-    if (!userRole.hasPermissionToGetRole("Agent")) {
+    if (!userRole.hasPermissionToGet("Agent")) {
         resp.status(403).send({ "message": "User not permitted" })
         return
     }
@@ -118,12 +123,28 @@ const getAllEmployees = async (req, resp) => {
     console.log(user)
     const userRole = Roles.reCreateRole(user.role) 
 
-    if (!userRole.hasPermissionToGetRole("Employee")) {
+    if (!userRole.hasPermissionToGet("Employee")) {
         resp.status(403).send({ "message": "User not permitted" })
         return
     }
     const { limit, page } = req.query
     const [length, currentPage] = await user.getAllUsersWithRole("Employee",limit, page)
+    resp.status(200).send({ "length": length, "data": currentPage })
+}
+const getAllCustomers = async (req, resp) => {
+    const [isLoggedIn, userPayload, user] = await JwtPayload.loggedInUser(req, resp)
+    if (!isLoggedIn) {
+        return
+    }
+    console.log(user)
+    const userRole = Roles.reCreateRole(user.role) 
+
+    if (!userRole.hasPermissionToGet("Customer")) {
+        resp.status(403).send({ "message": "User not permitted" })
+        return
+    }
+    const { limit, page } = req.query
+    const [length, currentPage] = await user.getAllUsersWithRole("Customer",limit, page)
     resp.status(200).send({ "length": length, "data": currentPage })
 }
 
@@ -155,7 +176,7 @@ const getAllAdmins = async (req, resp) => {
     console.log(user)
     const userRole = Roles.reCreateRole(user.role) 
 
-    if (!userRole.hasPermissionToGetRole("Employee")) {
+    if (!userRole.hasPermissionToGet("Admin")) {
         resp.status(403).send({ "message": "User not permitted" })
         return
     }
@@ -186,18 +207,32 @@ const getUser = async (req, resp) => {
 }
 
 const updateUser = async (req, resp) => {
-    const [iSAdminOrSelf, adminOrSelfPayload, user] = await JwtPayload.isValidAdminOrSelf(req, resp)
-    if (!iSAdminOrSelf) {
-        return "unauthorized access"
+    const [isLoggedIn, userPayload, user] = await JwtPayload.loggedInUser(req, resp)
+    if (!isLoggedIn) {
+        return
     }
-    const { username, propertyTobeUpdated, value } = req.body
-    const missingInput = checkForRequiredInputs(req, ["propertyTobeUpdated", "value"], ["username"])
+
+    const missingInput = checkForRequiredInputs(req, ["propertyToBeUpdated", "value"], ["username"])
     if (missingInput) {
         resp.status(401).send({ "message": `${missingInput} is required` })
         return `${missingInput} is required`
     }
 
-    const [isUpdated, UpdatedUser] = await user.updateUser(propertyTobeUpdated, value)
+    const { propertyToBeUpdated, value } = req.body
+    const {username} = req.params
+
+    const loggedInUserRole = Roles.reCreateRole(user.role)
+    
+    const [userToBeUpdated,message] = await User.findUser(username)
+
+
+    if (!loggedInUserRole.hasPermissionToUpdate(userToBeUpdated.role.role)) {
+        resp.status(403).send({ "message": "User not permitted" })
+        return
+    }
+
+    const [isUpdated, UpdatedUser] = await userToBeUpdated.updateUser(propertyToBeUpdated, value)
+    
     if (!isUpdated) {
         resp.status(500).send({ "message": "user not updated" })
         return "internal error"
@@ -205,35 +240,71 @@ const updateUser = async (req, resp) => {
     resp.status(200).send({ "data": UpdatedUser, "message": "user updated successfully" })
     return "updated successfully"
 }
+
 const deleteUser = async (req, resp) => {
 
-    const [isAdminOrSelf, adminOrSelfPayload, user] = await JwtPayload.isValidAdminOrSelf(req, resp)
-    if (!isAdminOrSelf) {
-        return "unauthorized access"
+    const [isLoggedIn, userPayload, user] = await JwtPayload.loggedInUser(req, resp)
+    if (!isLoggedIn) {
+        return
     }
-    const isDeleted = user.deleteUser()
+
+    const missingInput = checkForRequiredInputs(req, [], ["username"])
+    if (missingInput) {
+        resp.status(401).send({ "message": `${missingInput} is required` })
+        return `${missingInput} is required`
+    }
+
+    const loggedInUserRole = Roles.reCreateRole(user.role)
+
+    const [userTobeDeleted,message] = await User.findUser(username)
+
+    if (!loggedInUserRole.hasPermissionToDelete(userTobeDeleted.role.role)) {
+        resp.status(403).send({ "message": "User not permitted" })
+        return
+    }
+
+    const isDeleted = await userTobeDeleted.deleteUser()
 
     if (!isDeleted) {
-        resp.status(500).send({ "message": "not deleted" })
-        return "no deleted"
+        resp.status(500).send({ "message": "cannot be deleted" })
+        return "not deleted"
     }
     resp.status(200).send({ "message": "user deleted successfully" })
     return "deleted successfully"
 }
 
-const getBalance = async (req, resp) => {
+const getProfile = async (req, resp) => {
     const [isSelfUser, selfPayload, selfUser] = await JwtPayload.isValidSelfUser(req, resp)
     if (!isSelfUser) {
         return "unauthorized access"
     }
-    const [balance, message] = await selfUser.getBalance()
-    resp.status(200).send({ "data": balance, "message": message })
-    return "balance fetched"
+    resp.status(200).send({ "data": selfUser, "message": "profilefetched" })
+    return "profile fetched"
+}
+
+const updateProfile = async (req, resp) => {
+    const [isSelfUser, selfPayload, selfUser] = await JwtPayload.isValidSelfUser(req, resp)
+    if (!isSelfUser) {
+        return "unauthorized access"
+    }
+
+    const missingInput = checkForRequiredInputs(req, ["propertyToBeUpdated", "value"],[])
+    if (missingInput) {
+        resp.status(401).send({ "message": `${missingInput} is required` })
+        return `${missingInput} is required`
+    }
+    const [propertyToBeUpdated,value] = req.body
+    const [isUpdated,updatedProfile] = await selfUser.updateProfile(propertyToBeUpdated,value)
+    if (!isUpdated) {
+        resp.status(500).send({ "message": "user not updated" })
+        return "internal error"
+    }
+    resp.status(200).send({ "data": updatedProfile, "message": "profile updated successfully" })
+    return "updated successfully"
 }
 
 module.exports = {
     registerCustomer,createUser, getAllUser,
-    getUser, updateUser, deleteUser, getBalance,getAllAgents ,getAllEmployees,getAllAdmins,
-    changePassword
-
+    getUser, updateUser, deleteUser,getAllAgents ,getAllEmployees,getAllAdmins,getAllCustomers,
+    changePassword,getProfile,updateProfile
 }
