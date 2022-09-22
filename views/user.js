@@ -176,7 +176,7 @@ class User {
             return false
         }
 
-        this.commission = 0
+        this.commission = []
         return true
     }
 
@@ -641,11 +641,11 @@ class User {
     //city//
 
     // PlanType
-    async createPlanType(title) {
+    async createPlanType(title,status) {
         if (!this.role.role == "Admin") {
             return [null, "only admin create plan type"]
         }
-        return await PlanType.createPlanType(title)
+        return await PlanType.createPlanType(title,status)
     }
 
     async getAllPlanTypes() {

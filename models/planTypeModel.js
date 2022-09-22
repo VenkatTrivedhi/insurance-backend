@@ -5,7 +5,6 @@ const PlanTypeSchema = mongoose.Schema({
     id: { type: String , required:true},
     title: { type: String , unique:true,required:true},
     isActive: {type:Boolean},
-    schemes :{ type: mongoose.SchemaTypes.ObjectId,ref:"scheme" },
 }, {
     timestamps: true
 })

@@ -139,7 +139,7 @@ class DatabaseMongoose {
 
     async fetchAllUsers() {
         try {
-            let record = await UserModel.find()
+            let record = await UserModel.find().populate("credential role")
             return [record, "user fetched"]
         }
 
@@ -151,7 +151,7 @@ class DatabaseMongoose {
     async fetchUsersWitheRole(role) {
 
         try {
-            let record = await UserModel.find({ role: role })
+            let record = await UserModel.find({ role: role }).populate("credential role")
             return [record, `user with ${role} role fetched`]
         }
 
@@ -265,7 +265,7 @@ class DatabaseMongoose {
 
     async fetchAllSchemes() {
         try {
-            let newRecord = await SchemeModel.find()
+            let newRecord = await SchemeModel.find().populate("type")
             return [newRecord, "shemes fetched successfully"]
         }
         catch (err) {
@@ -275,7 +275,9 @@ class DatabaseMongoose {
 
     async fetchSchemeById(id) {
         try {
-            let newRecord = await SchemeModel.findOne({ id: id })
+            let newRecord = await SchemeModel.findOne({ id: id }).populate("type")
+            let base64=newRecord.image.data.toString("base64");
+            newRecord.image.data = base64
             return [newRecord, "schemes fetched successfully"]
         }
         catch (err) {
@@ -318,7 +320,7 @@ class DatabaseMongoose {
 
     async fetchAllPlans() {
         try {
-            let newRecord = await PlanModel.find()
+            let newRecord = await PlanModel.find().populate("type scheme")
             return [newRecord, "plan types fetched successfully"]
         }
         catch (err) {
@@ -330,7 +332,7 @@ class DatabaseMongoose {
     async fetchPlanById(id) {
 
         try {
-            let newRecord = await PlanModel.findOne({ id: id })
+            let newRecord = await PlanModel.findOne({ id: id }).populate("type scheme")
             return [newRecord, "plan  fetched successfully"]
         }
         catch (err) {
@@ -360,45 +362,6 @@ class DatabaseMongoose {
         } 
     }
 
-    async fetchAccount(account_no) {
-        try {
-            let newRecord = await AccountModel.findOne({ account_no: account_no }).populate("transactions")
-            return [newRecord, "account fetched successfully"]
-        }
-        catch (err) {
-            return DatabaseMongoose.hadleError(err)
-        }
-    }
-
-    async replaceAccount(account) {
-        try {
-            let record = await AccountModel.updateOne({ account_no: account.account_no }, account)
-            return [record, "account updated successfully"]
-        }
-        catch (err) {
-            return DatabaseMongoose.hadleError(err)
-        }
-    }
-
-    async creditAccount(account, amount) {
-        try {
-            let record = await AccountModel.updateOne({ account_no: account.account_no }, { $inc: { "balance": amount } })
-            return [record, "account updated successfully"]
-        }
-        catch (err) {
-            return DatabaseMongoose.hadleError(err)
-        }
-    }
-
-    async debitAccount(account, amount) {
-        try {
-            let record = await AccountModel.updateOne({ account_no: account.account_no }, { $inc: { "balance": -amount } })
-            return [record, "account updated successfully"]
-        }
-        catch (err) {
-            return DatabaseMongoose.hadleError(err)
-        }
-    }
 
     async pushTransaction(account, id) {
         try {

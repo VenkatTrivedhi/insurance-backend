@@ -28,7 +28,7 @@ const createPlan = async (req, resp,img ) => {
     const {typeId,schemeId,minimumTerm, maximumTerm, maximumAge, minimumAge,
         minimumInvestment, maximumInvestment, profitRatio ,status} = req.body
 
-    const [Plan,message] = await admin.createPlan(
+    const [Plan,message] = await user.createPlan(
         typeId,schemeId,minimumTerm, maximumTerm, maximumAge, minimumAge,
         minimumInvestment, maximumInvestment, profitRatio ,status)
     if(!Plan){
@@ -61,11 +61,9 @@ const getAllPlans = async (req, resp) => {
         return
     }
     const {limit,page} = req.query
-    const [list,message] = await user.getAllPlans(limit,page)
-    if(!list){
-            resp.status(401).send({ "message": message })
-        }
-    resp.status(200).send({ "data": list, "message": message })
+    const [length,list] = await user.getAllPlans(limit,page)
+    
+    resp.status(200).send({ "data": list,"length":length })
 }
 
 const deletePlan = async (req, resp) => {

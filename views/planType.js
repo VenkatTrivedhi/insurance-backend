@@ -7,12 +7,12 @@ class PlanType{
     constructor(id,title,isActive){
     this.id = id
     this.title = title
-    this.plans = []
     this.isActive = isActive
     }
     static db = new DatabaseMongoose() 
-
+    
     static async createPlanType(title,status){
+        console.log("###################",status)
         const id= uuid.v4()
         const newPlanType = new PlanType(id,title,status)
         const [PlaneTypeRecord, message] = await PlanType.db.insertPlanType(newPlanType)
@@ -23,7 +23,7 @@ class PlanType{
     }
 
     static reCreatePlanType(record){
-        return new PlanType(record.id,record.title,record.plans,record.isActive)
+        return new PlanType(record.id,record.title,record.isActive)
     }
 
     static async getAllPlanTypes(){   
