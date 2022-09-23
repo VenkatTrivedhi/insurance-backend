@@ -6,8 +6,7 @@ const fs =require("fs")
 const path =require("path")
 
 
-const createScheme = async (req, resp,img ) => {
-
+const createScheme = async (req, resp,img,imgPath) => {
     const [isAdmin, AdminPayload, admin] = await JwtPayload.isValidAdmin(req, resp)
     if(!isAdmin){
         return
@@ -19,7 +18,7 @@ const createScheme = async (req, resp,img ) => {
     }
     const {type,agentCommission,notes,status} = req.body
 
-    const [scheme,message] = await admin.createScheme(img,type,agentCommission,notes,status)
+    const [scheme,message] = await admin.createScheme(img,imgPath,type,agentCommission,notes,status)
     if(!scheme){
             resp.status(401).send({ "message": message })
         }

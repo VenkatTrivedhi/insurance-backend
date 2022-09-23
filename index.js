@@ -8,7 +8,6 @@ const {upload} = require("./middleWares/schemeImage")
 const path =require("path")
 const fs =require("fs")
 
-
 const {login,loggedInUser} = require("./controllers/login/controller")
 const logout = require("./controllers/logout/controller")
 const { 
@@ -34,7 +33,7 @@ const {
     roles,limitOfPage,
     getAllUsernames,statusOptions,
     employeeTypes} =require("./controllers/options/controller")
-
+const { createCommission,getAllCommission } = require("./controllers/commission/controller")
 const app = express()
 
 app.use(cors())
@@ -65,8 +64,9 @@ app.post("/api/v1/createScheme",upload.single('shemeImage'),async (req,resp) =>{
 const img =  {
     data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
     contentType: 'image/png'
-} 
-return await createScheme(req,resp,img)})
+}
+const pathImage = path.join(__dirname + req.file.path)
+return await createScheme(req,resp,img,pathImage)})
 
 app.get("/api/v1/getAllSchemes",async (req,resp) => await getAllSchemes(req,resp))
 app.put("/api/v1/updateScheme/:id",async (req,resp) => await updateScheme(req,resp))
@@ -89,9 +89,10 @@ app.post("/api/v1/registerCustomer",(req,resp)=>registerCustomer(req,resp))
 app.put("/api/v1/updateUser/:username",async (req,resp) => await updateUser(req,resp))
 app.delete("/api/v1/deleteUser/:username",async (req,resp) => await deleteUser(req,resp))
 
+//commssion
 
-app.post("/api/v1/createCustom",(req,resp)=>createUser(req,resp))
-
+app.post("/api/v1/createCommission",(req,resp)=>createCommission(req,resp))//fake
+app.get("/api/v1/getAllCommission",(req,resp)=>getAllCommission(req,resp))
 
 //server
 app.listen(8000,()=>{

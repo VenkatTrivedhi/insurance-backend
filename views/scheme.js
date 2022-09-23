@@ -3,9 +3,10 @@ const DatabaseMongoose = require("../repository/database")
 const Plan = require("./plan")
 
 class Scheme{
-    constructor(id,image,type,agentCommission,notes,isActive){
+    constructor(id,image,imgPath,type,agentCommission,notes,isActive){
     this.id = id
     this.image = image
+    this.imagePath = imgPath
     this.type = type
     this.agentCommission = agentCommission
     this.notes = notes
@@ -14,9 +15,9 @@ class Scheme{
     }
     static db = new DatabaseMongoose() 
 
-    static async createScheme(image,type,agentCommission,notes,isActive){
+    static async createScheme(image,imgPath,type,agentCommission,notes,isActive){
         const id= uuid.v4()
-        const newScheme = new Scheme(id,image,type,agentCommission,notes,isActive,[])
+        const newScheme = new Scheme(id,image,imgPath,type,agentCommission,notes,isActive,[])
         const [schemeRecord, message] = await Scheme.db.insertScheme(newScheme)
         if(!schemeRecord){
             return[null, message]
@@ -26,7 +27,7 @@ class Scheme{
 
     static reCreateScheme(record){
         return new Scheme(
-            record.id, record.image,
+            record.id, record.image,record.imagePath,
             record.type,record.agentCommission,
             record.notes, record.isActive,record.plans)
     }

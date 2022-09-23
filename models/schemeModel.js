@@ -7,6 +7,7 @@ const SchemeSchema = mongoose.Schema({
         data: Buffer,
         contentType: String
     },
+    imagePath:{type:String},
     type: { type: mongoose.SchemaTypes.ObjectId,ref:"planType"},
     agentCommission:{type:Number},
     notes:{type:String},

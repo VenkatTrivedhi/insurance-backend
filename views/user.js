@@ -10,6 +10,7 @@ const PlanType = require("./planType")
 const Plan = require("./plan")
 const Policy = require("./policy")
 const Scheme = require("./scheme")
+const Commission = require("./commission")
 
 class User {
 
@@ -671,7 +672,7 @@ class User {
     }
 
     //scheme
-    async createScheme(img, type, agentCommission, notes, status) {
+    async createScheme(img,imgPath,type, agentCommission, notes, status) {
         if (!this.role.role == "Admin") {
             return [null, "only admin create plan type"]
         }
@@ -680,7 +681,7 @@ class User {
             return [null, "plan type is not available"]
         }
         return await Scheme.createScheme(
-            img, planTypeRecord._id,
+            img,imgPath, planTypeRecord._id,
             agentCommission, notes, status)
     }
 
@@ -821,6 +822,26 @@ class User {
         return await plan.updatePlan(propertyTobeUpdated,value)
     }
 
+    //commssions 
+    //fakecreation
+
+    async addCommission(req){
+
+        const [credential,messageCred] = await User.db.fetchAllCredential(req.body.agent)
+        const [creden,messageCrede] = await User.db.fetchAllCredential(req.body.customer)
+        const [agent,messageAgent] = await User.db.fetchUser(credential)
+        console.log(req.body.agent)
+        const [customer,messageCustomer] = await User.db.fetchUser(creden)
+        const [scheme,messageOfScheme] = await User.db.fetchSchemeById(req.body.scheme)
+
+        const [commission,message] =  await Commission.createCommission(
+            undefined,agent,Date.now(),customer,scheme,req.body.amount)
+        return commission
+    }
+
+    async getAllCommission(limit,page){
+        return await Commission.getAllCommission(limit,page)
+    }
     //polacy
     // async createPolicy() {
     //     const [] = await Policy.createPolicy(plan, totalDuration, totalInvestment, termDuration, startingDate)

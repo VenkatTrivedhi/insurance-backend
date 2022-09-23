@@ -255,7 +255,7 @@ const deleteUser = async (req, resp) => {
     }
 
     const loggedInUserRole = Roles.reCreateRole(user.role)
-
+    const {username}= req.params
     const [userTobeDeleted,message] = await User.findUser(username)
 
     if (!loggedInUserRole.hasPermissionToDelete(userTobeDeleted.role.role)) {

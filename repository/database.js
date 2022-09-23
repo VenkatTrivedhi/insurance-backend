@@ -6,6 +6,7 @@ const PlanTypeModel = require("../models/planTypeModel")
 const PlanModel = require("../models/planModel")
 const SchemeModel = require("../models/schemeModel")
 const PremiumModel = require("../models/premiumModel")
+const CommissionModel = require("../models/commissionModel")
 const TransactionModel = require("../models/transactionModel")
 
 const url = "mongodb://localhost:27017/insurance"
@@ -386,6 +387,8 @@ class DatabaseMongoose {
             return DatabaseMongoose.hadleError(err)
         }
     }
+
+
     //roles
     async insertRole(roleObject) {
         try {
@@ -423,6 +426,29 @@ class DatabaseMongoose {
             let record = await RoleModel.updateOne({ id: role.id }, role)
             return [record, "role updated successfully"]
         }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    //commssions
+    async insertCommission(commssion){
+        try {
+            let newRecord = await CommissionModel.create(commssion)
+            return [newRecord, "commssion added successfully"]
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    async fetchAllCommission() {
+        try {
+            let record = await CommissionModel.find().populate(
+                "policy agent customer scheme")
+            return [record, "roles fetched"]
+        }
+
         catch (err) {
             return DatabaseMongoose.hadleError(err)
         }

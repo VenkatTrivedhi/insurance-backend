@@ -1,10 +1,12 @@
 const uuid = require("uuid")
 const DatabaseMongoose = require("../repository/database")
+const paginater = require("../paginater")
+
 
 class Commission {
-    constructor(id, policyNumber, agent, date, customer, scheme, amount) {
+    constructor(id, policy, agent, date, customer, scheme, amount) {
         this.id = id
-        this.policyNumber = policyNumber
+        this.policy = policy
         this.agent = agent
         this.date = date
         this.customer = customer
@@ -12,16 +14,35 @@ class Commission {
         this.amount = amount
     }
 
-    static db = DatabaseMongoose()
+    static db = new DatabaseMongoose()
 
-    static async createCommission(policyNumber, agent, date, customer, scheme, amount){
+    static async createCommission(policy, agent, date, customer, scheme, amount){
         const id = uuid.v4()
-        const newCommission = new Commission(id,policyNumber, agent, date, customer, scheme, amount)
+        const newCommission = new Commission(id,policy, agent, date, customer, scheme, amount)
         const[commissionRecord,message] = await Commission.db.insertCommission(newCommission)
-        if(commissionRecord){
+        if(!commissionRecord){
             return [null,"commission "]
         }
+        return [newCommission,"commsison added"]
     }
 
-    
+    static reCreateCommission(record) {
+        return new Commission(
+            record.id, record.policy, record.agent, record.date, record.customer,
+            record.scheme, record.amount)
+    }
+
+    static async getAllCommission(limit,page){
+        const [allCommissionRecords,] = await Commission.db.fetchAllCommission()
+        const currentCommissionRecord = paginater(allCommissionRecords, limit, page)
+        let currentPage = []
+        for (let index = 0; index < currentCommissionRecord.length; index++) {
+            let commissionObject = Commission.reCreateCommission(currentCommissionRecord[index])
+            currentPage.push(commissionObject)
+        }
+        return [allCommissionRecords.length, currentPage]
+    }
+
 }
+
+module.exports = Commission
