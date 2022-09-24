@@ -17,7 +17,7 @@ class Premium{
     static async createPremium(tobePaidAt,amount){
         const id = uuid.v4()
         const newPremium = new Premium(id,tobePaidAt,null,amount,"pending",[])
-        const [premiumRecord,messageOfInsert] =  await Premium.insertPremium(newPremium)
+        const [premiumRecord,messageOfInsert] =  await Premium.db.insertPremium(newPremium)
         if(!premiumRecord){
             return null
         }
@@ -25,20 +25,19 @@ class Premium{
     }
 
     static reCreatePremium(record){
-        new Premium(record.id,record.tobePaidAt,record.paidAt,record.amount,record.status,record.transactions)
+        return new Premium(record.id,record.tobePaidAt,record.paidAt,record.amount,record.status,record.transactions)
     }
 
     async payPremium(cardNumber,cvv,amount){
-        const transactionRecord = Transaction.createTransaction(cardNumber,cvv,amount)
+        const transactionRecord = await Transaction.createTransaction(cardNumber,cvv,amount)
         this.transactions.push(transactionRecord._id)
-        
         
         if(transactionRecord.status=="success"){
             this.status = "paid"
             this.paidAt = transactionRecord.doneAt
         }
         await Premium.db.replacePremium(this)
-        return [this,"premium paid successfully"]
+        return [this,transactionRecord,"premium paid successfully"]
     }
 }
 

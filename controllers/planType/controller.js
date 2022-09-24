@@ -45,11 +45,12 @@ const deletePlanType = async (req, resp) => {
         return `${missingInput} is required`
     }
     const {id} = req.params
+    console.log("@!!!!!!!!!!!!!@@@@@@@@@@@@@@@id,id",id)
     const [isUpdated,message] = await admin.deletePlanType(id)
     if(!isUpdated){
             resp.status(401).send({ "message": message })
         }
-    resp.status(200).send({ "data": plan, "message": message })
+    resp.status(200).send({ "message": message })
 }
 
 const updatePlanType = async (req, resp) => {
@@ -69,11 +70,8 @@ const updatePlanType = async (req, resp) => {
     if(!isUpdated){
             resp.status(401).send({ "message": message })
         }
-    resp.status(200).send({ "data": plan, "message": message })
+    resp.status(200).send({"message": message })
 }
-
-
-
 
 
 module.exports = {

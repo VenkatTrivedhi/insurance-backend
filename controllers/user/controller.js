@@ -6,20 +6,22 @@ const Roles = require("../../role")
 const registerCustomer =  async (req,resp)=>{
     
     const missingInput = checkForRequiredInputs(req, [
-        "firstName","lastName","Dob","username", "password", "role","email",
-        "address", "state", "city", "pincode", "mobileNumber",
-        "documentType","documentFile","nominee", "nomineeRelation",
-        "referedBy"])
-
+         "userName","referedBy"])
+    
+    const {firstName, lastName,Dob,userName, password ,email,
+            address, state, city, pincode, mobileNumber,
+            documentType,documentFile,nominee, nomineeRelation,
+            referedBy} = req.body
+    
     if (missingInput) {
         resp.status(401).send({ "message": `${missingInput} is required`})
         return `${missingInput} is required`
     }
 
     const [newUser, message] = await User.registerCustomer(
-        firstName, lastName,Dob,username, password ,email,
+        firstName, lastName, Dob, userName, password, email,
         address, state, city, pincode, mobileNumber,
-        documentType,documentFile,nominee, nomineeRelation,reference,
+        documentType, documentFile, nominee, nomineeRelation,
         referedBy)
     
     if (!newUser) {
@@ -42,22 +44,22 @@ const createUser = async (req, resp) => {
         resp.status(401).send({ "message": `role is required` })
         return `role is required`
     }
-    const userRole = Roles.reCreateRole(user.role) 
+    // const userRole = Roles.reCreateRole(user.role) 
 
-    if (!userRole.hasPermissionToCreate(role)) {
-        resp.status(403).send({ "message": "User not permitted" })
-        return
-    }
+    // if (!userRole.hasPermissionToCreate(role)) {
+    //     resp.status(403).send({ "message": "User not permitted" })
+    //     return
+    // }
 
-    if (role == "Agent") {
-        const missingInput = checkForRequiredInputs(req, [
-            "firstName","lastName","Dob","userName", "password", "role","email",
-            "address","mobileNumber","qualification","status"])
-        if (missingInput) {
-            resp.status(401).send({ "message": `${missingInput} is required`})
-            return `${missingInput} is required`
-        }
-    }
+    // if (role == "Agent") {
+    //     const missingInput = checkForRequiredInputs(req, [
+    //         "firstName","Dob","userName", "password", "role","email",
+    //         "address","mobileNumber","qualification","status"])
+    //     if (missingInput) {
+    //         resp.status(401).send({ "message": `${missingInput} is required`})
+    //         return `${missingInput} is required`
+    //     }
+    // }
 
     if (role == "Employee"||role=="Admin") {
         const missingInput = checkForRequiredInputs(req, [
@@ -104,12 +106,12 @@ const getAllAgents = async (req, resp) => {
         return
     }
     console.log(user)
-    const userRole = Roles.reCreateRole(user.role) 
+    // const userRole = Roles.reCreateRole(user.role) 
 
-    if (!userRole.hasPermissionToGet("Agent")) {
-        resp.status(403).send({ "message": "User not permitted" })
-        return
-    }
+    // if (!userRole.hasPermissionToGet("Agent")) {
+    //     resp.status(403).send({ "message": "User not permitted" })
+    //     return
+    // }
     const { limit, page } = req.query
     const [length, currentPage] = await user.getAllUsersWithRole("Agent",limit, page)
     resp.status(200).send({ "length": length, "data": currentPage })
@@ -121,12 +123,12 @@ const getAllEmployees = async (req, resp) => {
         return
     }
     console.log(user)
-    const userRole = Roles.reCreateRole(user.role) 
+    // const userRole = Roles.reCreateRole(user.role) 
 
-    if (!userRole.hasPermissionToGet("Employee")) {
-        resp.status(403).send({ "message": "User not permitted" })
-        return
-    }
+    // if (!userRole.hasPermissionToGet("Employee")) {
+    //     resp.status(403).send({ "message": "User not permitted" })
+    //     return
+    // }
     const { limit, page } = req.query
     const [length, currentPage] = await user.getAllUsersWithRole("Employee",limit, page)
     resp.status(200).send({ "length": length, "data": currentPage })
@@ -137,12 +139,12 @@ const getAllCustomers = async (req, resp) => {
         return
     }
     console.log(user)
-    const userRole = Roles.reCreateRole(user.role) 
+    // const userRole = Roles.reCreateRole(user.role) 
 
-    if (!userRole.hasPermissionToGet("Customer")) {
-        resp.status(403).send({ "message": "User not permitted" })
-        return
-    }
+    // if (!userRole.hasPermissionToGet("Customer")) {
+    //     resp.status(403).send({ "message": "User not permitted" })
+    //     return
+    // }
     const { limit, page } = req.query
     const [length, currentPage] = await user.getAllUsersWithRole("Customer",limit, page)
     resp.status(200).send({ "length": length, "data": currentPage })
@@ -174,12 +176,12 @@ const getAllAdmins = async (req, resp) => {
         return
     }
     console.log(user)
-    const userRole = Roles.reCreateRole(user.role) 
+    // const userRole = Roles.reCreateRole(user.role) 
 
-    if (!userRole.hasPermissionToGet("Admin")) {
-        resp.status(403).send({ "message": "User not permitted" })
-        return
-    }
+    // if (!userRole.hasPermissionToGet("Admin")) {
+    //     resp.status(403).send({ "message": "User not permitted" })
+    //     return
+    // }
     const { limit, page } = req.query
     const [length, currentPage] = await user.getAllUsersWithRole("Admin",limit, page)
     resp.status(200).send({ "length": length, "data": currentPage })
@@ -226,10 +228,10 @@ const updateUser = async (req, resp) => {
     const [userToBeUpdated,message] = await User.findUser(username)
 
 
-    if (!loggedInUserRole.hasPermissionToUpdate(userToBeUpdated.role.role)) {
-        resp.status(403).send({ "message": "User not permitted" })
-        return
-    }
+    // if (!loggedInUserRole.hasPermissionToUpdate(userToBeUpdated.role.role)) {
+    //     resp.status(403).send({ "message": "User not permitted" })
+    //     return
+    // }
 
     const [isUpdated, UpdatedUser] = await userToBeUpdated.updateUser(propertyToBeUpdated, value)
     
@@ -258,10 +260,10 @@ const deleteUser = async (req, resp) => {
     const {username}= req.params
     const [userTobeDeleted,message] = await User.findUser(username)
 
-    if (!loggedInUserRole.hasPermissionToDelete(userTobeDeleted.role.role)) {
-        resp.status(403).send({ "message": "User not permitted" })
-        return
-    }
+    // if (!loggedInUserRole.hasPermissionToDelete(userTobeDeleted.role.role)) {
+    //     resp.status(403).send({ "message": "User not permitted" })
+    //     return
+    // }
 
     const isDeleted = await userTobeDeleted.deleteUser()
 

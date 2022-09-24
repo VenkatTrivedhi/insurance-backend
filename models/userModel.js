@@ -12,8 +12,8 @@ const UserSchema = mongoose.Schema({
     email: { type: String},
     address: { type: String},
     isActive: { type: Boolean},
-    state : { type: mongoose.SchemaTypes.ObjectId,ref:"state" },
-    city : { type: mongoose.SchemaTypes.ObjectId,ref:"city" },
+    state : { type: String },
+    city : { type: String },
     pincode : { type: Number},
     mobileNumber:{type:Number},
     documents:{ type: [mongoose.SchemaTypes.ObjectId],ref:"document" },
@@ -22,9 +22,9 @@ const UserSchema = mongoose.Schema({
     nomineeRelation:{type:String},
     referenceID:{type:String},
     referedBy:{ type: mongoose.SchemaTypes.ObjectId,ref:"user"},
-    customers:{ type: [mongoose.SchemaTypes.ObjectId],ref:"user" },
+    commission:{type:Number},
     qualification:{type:String},
-    commission:{type:Number}
+    
 }, {
     timestamps: true
 })

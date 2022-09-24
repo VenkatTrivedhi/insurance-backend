@@ -10,6 +10,7 @@ const fs =require("fs")
 
 const {login,loggedInUser} = require("./controllers/login/controller")
 const logout = require("./controllers/logout/controller")
+
 const { 
     registerCustomer,createUser,
     getAllAgents,getAllEmployees,getAllAdmins,
@@ -33,7 +34,13 @@ const {
     roles,limitOfPage,
     getAllUsernames,statusOptions,
     employeeTypes} =require("./controllers/options/controller")
-const { createCommission,getAllCommission } = require("./controllers/commission/controller")
+
+const { getAllCommission, getAllCommissionOfAgent } = require("./controllers/commission/controller")
+const { createPolicy,getAllPolicy,getAllPolicyOfCustomer} = require("./controllers/policy/controller")
+const { getAllCommissionWithDrawlOfAgent, WithDrawCommission,
+    getAllCommissionWithDrawl } = require("./controllers/commissionWithDrawl/controller")
+
+
 const app = express()
 
 app.use(cors())
@@ -79,20 +86,51 @@ app.get("/api/v1/getAllPlansByType/:typeId",async (req,resp) => await getAllPlan
 app.put("/api/v1/updatePlan/:id",async (req,resp) => await updatePlan(req,resp))
 app.delete("/api/v1/deletePlan/:id",async (req,resp) => await deletePlan(req,resp))
 
+//user
 app.post("/api/v1/createUser",(req,resp)=>createUser(req,resp))
 app.get("/api/v1/getAllAgents",(req,resp)=>getAllAgents(req,resp))
 app.get("/api/v1/getAllAdmins",(req,resp)=>getAllAdmins(req,resp))
 app.get("/api/v1/getAllEmployees",(req,resp)=>getAllEmployees(req,resp))
 app.get("/api/v1/getAllCustomers",(req,resp)=>getAllCustomers(req,resp))
 app.post("/api/v1/registerCustomer",(req,resp)=>registerCustomer(req,resp))
-
 app.put("/api/v1/updateUser/:username",async (req,resp) => await updateUser(req,resp))
 app.delete("/api/v1/deleteUser/:username",async (req,resp) => await deleteUser(req,resp))
 
-//commssion
+//policies
+app.post("/api/v1/createPolicy",(req,resp)=>createPolicy(req,resp))
 
-app.post("/api/v1/createCommission",(req,resp)=>createCommission(req,resp))//fake
+//getAllPolicies //insurance account
+app.get("/api/v1/getAllPolicy",(req,resp)=>getAllPolicy (req,resp))//admin
+app.get("/api/v1/getAllPolicy/:username",(req,resp)=>getAllPolicyOfCustomer(req,resp))//customer
+
+//Premium//
+app.get("/api/v1/getAllPremium/:policyId",(req,resp)=>getAllPremiums(req,resp))
+
+//app.post("/api/v1/createCommission",(req,resp)=>createCommission(req,resp))//fake
 app.get("/api/v1/getAllCommission",(req,resp)=>getAllCommission(req,resp))
+app.get("/api/v1/getAllCommission/:username",(req,resp)=>getAllCommissionOfAgent(req,resp))
+
+//commssionWithDraw
+app.post("/api/v1/withDrawCommission/:username",(req,resp)=>WithDrawCommission(req,resp))//agent/
+app.get("/api/v1/getAllWithdrawlOfAgent/:username",(req,resp)=>getAllCommissionWithDrawlOfAgent(req,resp))//customer
+app.get("/api/v1/getAllWithdrawl",(req,resp)=> getAllCommissionWithDrawl(req,resp))//admin
+
+
+//Queries
+app.post("/api/v1/postQueries/",(req,resp)=>createPolicy(req,resp))///
+app.get("/api/v1/getAllQueries",(req,resp)=>getAllQueries(req,resp))
+
+//reply
+app.post("/api/v1/replyQuery/:id",(req,resp)=>createPolicy(req,resp))
+
+
+//state
+app.post("/api/v1/createState",(req,resp)=>createState(req,resp))
+app.get("/api/v1/getAllState",(req,resp)=>getAllStates(req,resp))
+
+app.post("/api/v1/createCity/:state",(req,resp)=>createCity(req,resp))
+app.get("/api/v1/getAllState/:state",(req,resp)=>getAllCity(req,resp))
+
 
 //server
 app.listen(8000,()=>{

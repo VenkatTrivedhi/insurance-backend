@@ -11,6 +11,7 @@ const Plan = require("./plan")
 const Policy = require("./policy")
 const Scheme = require("./scheme")
 const Commission = require("./commission")
+const CommissionWithDrawl = require("./commsionWithdrawl")
 
 class User {
 
@@ -18,7 +19,7 @@ class User {
         id, firstName, lastName, fullName, Dob, credential, role, isActive, email,
         address, state, city, pincode, mobileNumber,
         documents, status, nominee, nomineeRelation, referenceId,
-        referedBy, customers, qualification, commission) {
+        referedBy, commission, qualification) {
 
         this.id = id
         this.firstName = firstName
@@ -40,7 +41,7 @@ class User {
         this.status = status
         this.referenceId = referenceId //field of agent
         this.referedBy = referedBy// field of customer
-        this.customers = customers
+        this.commission = commission
         this.qualification = qualification
     }
 
@@ -122,10 +123,8 @@ class User {
                 status,
                 nominee,
                 nomineeRelation, referenceID,
-                agentId, [], qualification)
-
-            newUserObject.generateReferenceId
-            newUserObject.createCommission
+                agentId, 0, qualification)
+    
 
             const [newUserRecord, messageOfNewUserRecord] =
                 await User.db.insertUser(newUserObject)
@@ -163,7 +162,7 @@ class User {
     }
 
     async generateReferenceId() {
-        if (!this.role == "Agent") {
+        if (!this.roel.role == "Agent") {
             return false
         }
         let id = uuid.v4()
@@ -172,14 +171,6 @@ class User {
         return true
     }
 
-    async createCommission() {
-        if (!this.role == "Agent") {
-            return false
-        }
-
-        this.commission = []
-        return true
-    }
 
     static async registerCustomer(
         firstname, lastname, Dob, username, password, email,
@@ -187,13 +178,19 @@ class User {
         documentType, documentFile, nominee, nomineeRelation,
         referedBy, qualification) {
 
+        console.log(referedBy,"dfgfgggggggggggggggggggg")
         const [fetchedCredentialRecord, msgOfCredentialFetch] =
             await User.db.fetchCredential(username)
 
         if (!fetchedCredentialRecord) {
             const id = uuid.v4()
 
-            fullName = User.getFullName(firstname, lastname)
+            const [agent, msgOfCredentialFetch] =
+            await User.findUser(referedBy)
+
+            const [agentRecord,msg] = await User.db.fetchUser(agent.credential)
+
+            const fullName = User.getFullName(firstname, lastname)
 
             const [newCredentialObject, messageOfCreatingCredential] =
                 await Credential.createCredential(username, password)
@@ -204,13 +201,13 @@ class User {
             }
 
             const [roleRecord, messageOfRole] = await User.db.fetchRole("Customer")
-            const agentId = await User.findAgentId(referedBy)
+
             const newUserObject = new User(
                 id, firstname, lastname, fullName, Dob, newCredentialRecord._id,
                 roleRecord._id, true, email,
                 address, state, city, pincode, mobileNumber,
                 [], "awaiting", nominee, nomineeRelation, null,
-                agentId, undefined, qualification)
+                agentRecord._id, undefined, qualification)
 
             const [newUserRecord, messageOfNewUserRecord] =
                 await User.db.insertUser(newUserObject)
@@ -267,7 +264,7 @@ class User {
             record.nomineeRelation,
             record.referenceId,
             record.referedBy,
-            record.customers,
+            record.commission,
             record.qualification
         )
         return UserObject
@@ -662,13 +659,10 @@ class User {
         return [null, "plan type could not be updated"]
     }
 
-    async deletePlanType(id) {
-        this.isActive = false
-        const [response, message] = await User.db.replacePlanType(id, this)
-        if (response) {
-            return [this, "plane type delete successfully"]
-        }
-        return [null, "plan type could not be deleted"]
+    async updatePlanType(id, type) {
+        const [planType, message] = await User.db.fetchPlanTypeById(id)
+        const typeObject = PlanType.reCreatePlanType(planType)
+        return await typeObject.updatePlanType(type)
     }
 
     //scheme
@@ -700,9 +694,9 @@ class User {
         schemeRecord.isActive = false
         const [isDelete,msg] = await User.db.replaceScheme(schemeRecord)
         if(!isDelete){
-            return false
+            return [false,"Scheme not deleted"]
         }
-        return true
+        return [true,"Scheme not deleted"]
     }
 
     //Plan
@@ -715,11 +709,11 @@ class User {
         }
         const [planeTypeRecord, messageOfType] = await User.db.fetchPlanTypeById(typeId)
         if (!planeTypeRecord) {
-            return [null, "no such type plan exist"]
+            return [null, "no such type plan exist..."]
         }
         const [schemeRecord, messageOfScheme] = await User.db.fetchSchemeById(schemeId)
         if (!schemeRecord) {
-            return [null, "no such type plan exist"]
+            return [null, "no such scheme plan exist"]
         }
         return await Plan.createPlan(planeTypeRecord._id, schemeRecord._id, minimumTerm, maximumTerm, maximumAge, minimumAge,
             minimumInvestment, maximumInvestment, profitRatio, isActive)
@@ -811,9 +805,9 @@ class User {
         planRecord.isActive = false
         const [isDelete,msg] = await User.db.replacePlan(planRecord)
         if(!isDelete){
-            return false
+            return [false,"Plan not deleted"]
         }
-        return true
+        return [true,"Plan Deleted successfully"]
     }
 
     async updatePlan(id,propertyTobeUpdated,value) {
@@ -825,28 +819,80 @@ class User {
     //commssions 
     //fakecreation
 
-    async addCommission(req){
-
-        const [credential,messageCred] = await User.db.fetchAllCredential(req.body.agent)
-        const [creden,messageCrede] = await User.db.fetchAllCredential(req.body.customer)
-        const [agent,messageAgent] = await User.db.fetchUser(credential)
-        console.log(req.body.agent)
-        const [customer,messageCustomer] = await User.db.fetchUser(creden)
-        const [scheme,messageOfScheme] = await User.db.fetchSchemeById(req.body.scheme)
-
-        const [commission,message] =  await Commission.createCommission(
-            undefined,agent,Date.now(),customer,scheme,req.body.amount)
-        return commission
+    async addCommission(amount){
+        if (!this.role.role == "Agent") {
+            return [false,"only agent will get commssion"]
+        }
+        this.commission = this.commission+amount
+        await User.db.replaceUser(this)
+        return [true ,"commission added"]
     }
 
+    async withDrawCommission(amount){
+        if (!this.role.role == "Agent") {
+            return [null,"only agent can withdraw commssion"]
+        }
+        if(this.commission<amount){
+            return [null,"insuffient amount commission"]
+        }
+        this.commission = this.commission+amount
+        await User.db.replaceUser(this)
+        const [agentRecord,mesg]= await User.db.fetchUser(this.credential)
+
+        return await CommissionWithDrawl.createCommissionWithDrawl(
+            agentRecord._id,new Date(),amount)
+    
+    }
+    
+    
+    async createPolicy(
+        planId,totalDuration,totalInvestment,termDuration,
+        cardNumber,cvv,amount) {
+         return await Policy.createPolicy(
+            this,planId, totalDuration, totalInvestment, termDuration,
+            cardNumber,cvv,amount)
+     }
+
+    async getAllPolicys(){
+        return await User.db.fetchAllPolicy()
+    }
+
+    async getAllPolicysOfCustomer(username){
+        const [cred,msg] = await User.db.fetchCredential(username)
+        if(!cred){
+            return [null,"no such user found"]
+        }
+        const [userRec,msgOfUser]= await User.db.fetchUser(cred)
+        return await User.db.fetchAllPolicyForCustomer(userRec)
+    }
+
+    //commmission
     async getAllCommission(limit,page){
         return await Commission.getAllCommission(limit,page)
     }
-    //polacy
-    // async createPolicy() {
-    //     const [] = await Policy.createPolicy(plan, totalDuration, totalInvestment, termDuration, startingDate)
-    // }
 
+    async getAllCommissionOfAgent(username){
+        const [cred,msg] = await User.db.fetchCredential(username)
+        if(!cred){
+            return [null,"no such user found"]
+        }
+        const [userRec,msgOfUser]= await User.db.fetchUser(cred)
+        return await User.db.fetchAllCommissionOfAgent(userRec)
+    }
+
+    //withdrwl
+    async getAllCommissionWithDrawl(limit,page){
+        return await CommissionWithDrawl.getAllCommissionWithDrawl(limit,page)
+    }
+    async getAllCommissionWithDrawlOfAgent(username){
+        const [cred,msg] = await User.db.fetchCredential(username)
+        if(!cred){
+            return [null,"no such user found"]
+        }
+        const [userRec,msgOfUser]= await User.db.fetchUser(cred)
+        return await User.db.fetchAllCommissionWithDrawlOfAgent(userRec)
+    }
+    
 }
 console.log(User.createSuperUser("super", "user", "admin", "admin@123", "k.s.venkat614@gmail.com"))
 module.exports = User

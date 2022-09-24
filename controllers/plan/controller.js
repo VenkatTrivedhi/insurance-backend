@@ -33,6 +33,7 @@ const createPlan = async (req, resp,img ) => {
         minimumInvestment, maximumInvestment, profitRatio ,status)
     if(!Plan){
             resp.status(401).send({ "message": message })
+            return
         }
     resp.status(200).send({ "data": Plan, "message": message })
 }

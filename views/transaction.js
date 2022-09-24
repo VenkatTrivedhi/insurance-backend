@@ -15,8 +15,9 @@ class Transaction{
 
     static async createTransaction(cardNumber,cvv,amount){
         const id = uuid.v4()
-        const newTransaction = new Transaction(id,cardNumber,cvv,amount,new Date.now(),"success")
-        const transactionRecord = await Transaction.db.insertTransaction(newTransaction)
+        const newTransaction = new Transaction(id,cardNumber,cvv,amount,new Date(),"success")
+        const [transactionRecord,msg] = await Transaction.db.insertTransaction(newTransaction)
+        console.log(transactionRecord,"##############33")
         return transactionRecord
     }
 }

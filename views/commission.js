@@ -1,6 +1,7 @@
 const uuid = require("uuid")
 const DatabaseMongoose = require("../repository/database")
 const paginater = require("../paginater")
+const User = require("./user")
 
 
 class Commission {
@@ -16,20 +17,24 @@ class Commission {
 
     static db = new DatabaseMongoose()
 
-    static async createCommission(policy, agent, date, customer, scheme, amount){
+    static async createCommission(policyRecord, userRecord, planRecord, amount){
         const id = uuid.v4()
-        const newCommission = new Commission(id,policy, agent, date, customer, scheme, amount)
+        const newCommission = new Commission(id,policyRecord._id, userRecord.referedBy._id,
+            policyRecord.startDate,userRecord._id,planRecord.scheme._id, amount)
         const[commissionRecord,message] = await Commission.db.insertCommission(newCommission)
         if(!commissionRecord){
-            return [null,"commission "]
+            return [null,"commission not stored"]
         }
+        const [agentRecord,msg] = await Commission.db.fetchAgent(userRecord.referedBy._id)
+        agentRecord.commission = agentRecord.commission+amount
+        await Commission.db.replaceUser(agentRecord)
         return [newCommission,"commsison added"]
     }
 
     static reCreateCommission(record) {
         return new Commission(
             record.id, record.policy, record.agent, record.date, record.customer,
-            record.scheme, record.amount)
+            record.scheme, record.amount,record.withdrawl)
     }
 
     static async getAllCommission(limit,page){
@@ -42,6 +47,7 @@ class Commission {
         }
         return [allCommissionRecords.length, currentPage]
     }
+
 
 }
 

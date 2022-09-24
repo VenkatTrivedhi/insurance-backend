@@ -7,11 +7,10 @@ class Scheme{
     this.id = id
     this.image = image
     this.imagePath = imgPath
-    this.type = type
+    this.type = type 
     this.agentCommission = agentCommission
     this.notes = notes
     this.isActive = isActive
-    this.plans = []
     }
     static db = new DatabaseMongoose() 
 

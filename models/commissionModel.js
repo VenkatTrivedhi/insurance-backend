@@ -7,7 +7,7 @@ const CommissionSchema = mongoose.Schema({
     date : {type:Date},
     customer : {type: mongoose.SchemaTypes.ObjectId,ref:"user"},
     scheme : {type: mongoose.SchemaTypes.ObjectId,ref:"scheme"},
-    amount :{type:Number}  
+    amount :{type:Number} ,
 }, {
     timestamps: true
 })

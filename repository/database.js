@@ -7,7 +7,9 @@ const PlanModel = require("../models/planModel")
 const SchemeModel = require("../models/schemeModel")
 const PremiumModel = require("../models/premiumModel")
 const CommissionModel = require("../models/commissionModel")
-const TransactionModel = require("../models/transactionModel")
+const TransactionModel = require("../models/transactionModel");
+const PolicyModel = require("../models/policyModel");
+const CommissionWithDrawlModel = require('../models/commissionWithDrawlModel');
 
 const url = "mongodb://localhost:27017/insurance"
 
@@ -128,7 +130,7 @@ class DatabaseMongoose {
 
     async fetchUser(credential) {
         try {
-            let record = await UserModel.findOne({ credential: credential }).populate("credential role")
+            let record = await UserModel.findOne({ credential: credential }).populate("credential role referedBy")
             return [record, "user fetched"]
         }
 
@@ -140,7 +142,7 @@ class DatabaseMongoose {
 
     async fetchAllUsers() {
         try {
-            let record = await UserModel.find().populate("credential role")
+            let record = await UserModel.find().populate("credential role referedBy")
             return [record, "user fetched"]
         }
 
@@ -184,9 +186,9 @@ class DatabaseMongoose {
         }
     }
 
-    async fetchAgent(referenceID) {
+    async fetchAgent(_id) {
         try {
-            let record = await UserModel.findOne({ referenceID: referenceID })
+            let record = await UserModel.findOne({ _id: _id})
             return [record, "user fetched"]
         }
 
@@ -219,7 +221,7 @@ class DatabaseMongoose {
     }
 
     async fetchPlanTypeById(id) {
-        console.log(id)
+        console.log("$$$$$$",id)
 
         try {
             let newRecord = await PlanTypeModel.findOne({ id: id })
@@ -363,7 +365,6 @@ class DatabaseMongoose {
         } 
     }
 
-
     async pushTransaction(account, id) {
         try {
             let record = await AccountModel.updateOne({ account_no: account.account_no }, { $push: { "transactions": id } })
@@ -454,6 +455,138 @@ class DatabaseMongoose {
         }
     }
 
+    //policy
+
+    async insertPolicy(policy){
+        try {
+            let newRecord = await PolicyModel.create(policy)
+            return [newRecord, "Policy added successfully"]
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+    
+    async fetchAllPolicy() {
+        try {
+            let record = await PolicyModel.find().populate("premiums")
+            return [record,"policies fetched"]
+        }
+
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+    async fetchAllPolicyForCustomer(customer) {
+        try {
+            let record = await PolicyModel.find({customer:customer}).populate("premiums")
+            return [record,"policies fetched"]
+        }
+
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    //premium
+    async insertPremium(newPremium){
+        try {
+            let newRecord = await PremiumModel.create(newPremium)
+            return [newRecord, "premium added successfully"]
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    async fetchPremium(payId) {
+        try {
+            let record = await PremiumModel.find({id:payId}).populate()
+            return [record,"premiums fetched"]
+        }
+
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    async fetchAllPremiums() {
+        try {
+            let record = await PremiumModel.find()
+            return [record,"premiums fetched"]
+        }
+
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    async replacePremium(premium) {
+        try {
+            let record = await PremiumModel.updateOne({ id: premium.id }, premium)
+            return [record, "premium updated successfully"]
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    async fetchPremiumWith_Id(_id){
+        try {
+            let record = await PremiumModel.findOne({_id:_id}).populate()
+            return [record,"premiums fetched"]
+        }
+
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+
+    async fetchAllCommissionOfAgent(agent) {
+        try {
+            let record = await CommissionModel.find({agent:agent}).populate("policy agent customer scheme")
+            return [record,"policies fetched"]
+        }
+        
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    //withdrwal
+    async insertCommissionWithDrawl(newCommissionWithDrawl){
+        try {
+            let newRecord = await CommissionWithDrawlModel.create(newCommissionWithDrawl)
+            return [newRecord, "commissionWithDraw added successfully"]
+        }
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    async fetchAllCommissionWithDrawl() {
+        try {
+            let record = await CommissionWithDrawlModel.find().populate("agent")
+            return [record,"commisssion withdrwl fetched"]
+        }
+
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+
+    async fetchAllCommissionWithDrawlOfAgent(agent) {
+        try {
+            let record = await CommissionWithDrawlModel.find({agent:agent}).populate("agent")
+            return [record,"withdrwl fetched"]
+        }
+
+        catch (err) {
+            return DatabaseMongoose.hadleError(err)
+        }
+    }
+    
 }
 
 

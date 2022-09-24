@@ -69,7 +69,15 @@ class PlanType{
         }
         return [currentPage,eligiblePlans.length]
     }
-  
+
+    async updatePlanType(type) {
+        this.title = type
+        const [response, message] = await PlanType.db.replacePlanType(this.id, this)
+        if (response) {
+            return [this, "plane type updated successfully"]
+        }
+        return [null, "plan type could not be updated"]
+    }
 }
 
 module.exports = PlanType
